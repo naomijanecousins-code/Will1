@@ -1,1 +1,216 @@
 # Will1
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Will Builder — LLB Year 3</title>
+<style>
+:root{--navy:#172b4d;--blue:#2b5c91;--ink:#172033;--muted:#637083;--line:#d9e0e8;--bg:#f4f7fb;--white:#fff;--good:#e8f6ed;--warn:#fff4d6;--bad:#ffeaea}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,Arial,sans-serif}
+header{background:var(--navy);color:#fff;padding:24px}
+.wrap{max-width:980px;margin:auto}
+.brand{display:flex;justify-content:space-between;gap:20px;align-items:center}
+h1{margin:0;font-size:28px}
+header p{margin:4px 0 0;color:#dbe6f4}
+main{max-width:980px;margin:22px auto;padding:0 14px}
+.card{background:var(--white);border:1px solid var(--line);border-radius:15px;padding:22px;margin-bottom:16px;box-shadow:0 2px 9px #172b4d0a}
+h2{margin:0 0 8px}h3{margin:18px 0 7px}
+.muted{color:var(--muted)}
+.tag{display:inline-block;border-radius:999px;background:#eaf0f7;padding:3px 8px;font-size:12px;font-weight:700}
+.notice{padding:13px 15px;border-radius:10px;margin:13px 0}.info{background:#eaf2fb}.warn{background:var(--warn)}.good{background:var(--good)}.bad{background:var(--bad)}
+label{font-weight:700;display:block;margin:13px 0 5px}
+input,textarea{width:100%;padding:10px 11px;border:1px solid #cbd4df;border-radius:8px;background:#fff;font:inherit}
+textarea{min-height:90px}
+button{font:inherit;cursor:pointer;border:0;border-radius:9px;padding:10px 14px;font-weight:700}
+.primary{background:var(--blue);color:#fff}.secondary{background:#e8edf3;color:var(--ink)}.small{padding:7px 10px;font-size:13px}
+.actions{display:flex;justify-content:space-between;gap:10px;margin-top:18px;flex-wrap:wrap}
+.step{display:none}.step.active{display:block}
+.progress{height:8px;background:#dfe6ef;border-radius:99px;overflow:hidden;margin-bottom:18px}
+.progress>div{height:100%;background:var(--blue);width:0}
+.list{border:1px solid var(--line);border-radius:10px;padding:12px;margin:9px 0;background:#fbfcfe}
+.rowhead{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+pre{white-space:pre-wrap;background:#fbfcfe;border:1px solid var(--line);padding:18px;border-radius:10px;font-family:Georgia,serif;line-height:1.65}
+table{width:100%;border-collapse:collapse}th,td{padding:9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+footer{max-width:980px;margin:auto;padding:0 14px 30px;color:var(--muted);font-size:13px}
+@media(max-width:720px){.grid{grid-template-columns:1fr}.brand{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+<header>
+<div class="wrap brand">
+<div><h1>Will Builder</h1><p>LLB Year 3 — Student Drafting Exercise</p></div>
+<span class="tag">Student version</span>
+</div>
+</header>
+
+<main>
+<section class="card">
+<div class="notice info"><strong>Task:</strong> Create your own fictional will. Enter only the fictional testator’s name, specific gifts and the residue of the estate.</div>
+<div class="notice warn"><strong>Teaching draft only.</strong> This activity is for classroom use and is not a document for execution.</div>
+</section>
+
+<section class="card">
+<div class="progress"><div id="bar"></div></div>
+
+<div class="step active" data-step="0">
+<h2>1. Testator</h2>
+<p class="muted">Use a fictional name.</p>
+<label for="testator">Name of testator</label>
+<input id="testator" placeholder="e.g. Eleanor Smith">
+</div>
+
+<div class="step" data-step="1">
+<h2>2. Specific gifts</h2>
+<p class="muted">Record each gift clearly enough to identify the property and intended beneficiary.</p>
+<div id="gifts"></div>
+<button class="small secondary" type="button" onclick="addGift()">+ Add gift</button>
+<div class="notice info">Consider whether the gift and beneficiary are identified precisely enough for a draft will.</div>
+</div>
+
+<div class="step" data-step="2">
+<h2>3. Residue of the estate</h2>
+<p class="muted">Divide the residue between one or more fictional beneficiaries. Shares must total 100%.</p>
+<div id="residue"></div>
+<button class="small secondary" type="button" onclick="addResidue()">+ Add residuary beneficiary</button>
+<div id="rerr" class="notice bad hidden"></div>
+</div>
+
+<div class="step" data-step="3">
+<h2>4. Review and submit</h2>
+<div id="checks"></div>
+<div class="notice info"><strong>Review the legal drafting:</strong> check that the testator is named, gifts are sufficiently clear, and the residue accounts for the whole estate.</div>
+<pre id="draft"></pre>
+<div class="actions">
+<button class="secondary" type="button" onclick="copyDraft()">Copy draft</button>
+<button class="secondary" type="button" onclick="downloadSubmission()">Download submission</button>
+</div>
+<div id="saved" class="notice good hidden">Submission file created. Submit the downloaded JSON file through your VLE or tutor’s chosen method.</div>
+</div>
+
+<div class="actions">
+<button class="secondary" id="backBtn" type="button" onclick="backStep()">Back</button>
+<button class="primary" id="nextBtn" type="button" onclick="nextStep()">Continue</button>
+</div>
+</section>
+</main>
+
+<footer>
+<p>Use fictional information only. This prototype is an educational exercise and does not assess or guarantee testamentary capacity, knowledge and approval, undue influence, tax, family provision issues, ownership, probate outcomes or the validity of a particular gift.</p>
+</footer>
+
+<script>
+let S={step:0,gifts:[],residue:[]};
+
+function $(id){return document.getElementById(id)}
+function esc(x){return String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function addGift(){S.gifts.push({asset:'',beneficiary:''});render()}
+function addResidue(){S.residue.push({name:'',share:''});render()}
+
+function totalResidue(){return S.residue.reduce((a,r)=>a+(parseFloat(r.share)||0),0)}
+
+function render(){
+  $('gifts').innerHTML=S.gifts.map((g,i)=>`
+    <div class="list">
+      <div class="rowhead"><strong>Gift ${i+1}</strong>
+      <button class="small secondary" type="button" onclick="S.gifts.splice(${i},1);render()">Remove</button></div>
+      <label>Gift / asset</label>
+      <input value="${esc(g.asset)}" oninput="S.gifts[${i}].asset=this.value" placeholder="e.g. my gold watch">
+      <label>Beneficiary</label>
+      <input value="${esc(g.beneficiary)}" oninput="S.gifts[${i}].beneficiary=this.value" placeholder="e.g. Jordan Smith">
+    </div>`).join('') || '<p class="muted">No specific gifts added yet.</p>';
+
+  $('residue').innerHTML=S.residue.map((r,i)=>`
+    <div class="list">
+      <div class="rowhead"><strong>Residuary beneficiary ${i+1}</strong>
+      <button class="small secondary" type="button" onclick="S.residue.splice(${i},1);render()">Remove</button></div>
+      <div class="grid">
+        <div><label>Beneficiary</label><input value="${esc(r.name)}" oninput="S.residue[${i}].name=this.value" placeholder="e.g. Jordan Smith"></div>
+        <div><label>Share %</label><input type="number" min="0" max="100" step="0.01" value="${esc(r.share)}" oninput="S.residue[${i}].share=this.value"></div>
+      </div>
+    </div>`).join('') || '<p class="muted">No residuary beneficiaries added yet.</p>';
+
+  const total=totalResidue();
+  const residueOk=S.residue.length>0 && Math.abs(total-100)<0.001;
+  $('rerr').classList.toggle('hidden',residueOk || S.residue.length===0);
+  $('rerr').textContent=`Residuary shares currently total ${total}%. They must total 100%.`;
+
+  document.querySelectorAll('.step').forEach((el,i)=>el.classList.toggle('active',i===S.step));
+  $('bar').style.width=(S.step/3*100)+'%';
+  $('backBtn').disabled=S.step===0;
+  $('backBtn').style.opacity=S.step===0?'.5':'1';
+  $('nextBtn').textContent=S.step===3?'Create submission':'Continue';
+
+  if(S.step===3){renderReview();$('draft').textContent=makeDraft()}
+}
+
+function renderReview(){
+  const issues=[];
+  const name=$('testator').value.trim();
+  if(!name)issues.push('Add the testator’s name.');
+  S.gifts.forEach((g,i)=>{
+    if(!g.asset.trim()||!g.beneficiary.trim())issues.push(`Gift ${i+1} is incomplete.`);
+  });
+  if(!S.residue.length)issues.push('Add at least one residuary beneficiary.');
+  if(S.residue.length && Math.abs(totalResidue()-100)>0.001)issues.push(`Residue shares total ${totalResidue()}%, not 100%.`);
+
+  $('checks').innerHTML=issues.length
+    ? `<div class="notice warn"><strong>Check before submission</strong><ul>${issues.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`
+    : `<div class="notice good"><strong>Basic checks passed.</strong> Now read the draft critically before submitting it.</div>`;
+}
+
+function makeDraft(){
+  const name=$('testator').value.trim()||'[TESTATOR NAME]';
+  let d=`CLASSROOM DRAFT — NOT FOR EXECUTION\n\nLAST WILL AND TESTAMENT\n\nTESTATOR\nI, ${name}, declare this to be my Will.\n\nSPECIFIC GIFTS\n`;
+  if(S.gifts.length){
+    S.gifts.forEach((g,i)=>d+=`${i+1}. I give ${g.asset||'[GIFT / ASSET]'} to ${g.beneficiary||'[BENEFICIARY]'}.\n`);
+  } else d+='No specific gifts recorded.\n';
+
+  d+='\nRESIDUARY ESTATE\n';
+  if(S.residue.length){
+    S.residue.forEach(r=>d+=`• ${r.name||'[BENEFICIARY]'} — ${r.share||'[ ]'}%\n`);
+  } else d+='No residuary beneficiaries recorded.\n';
+
+  d+='\nTEACHING NOTE\nThis is a classroom drafting exercise, not a legally validated Will.';
+  return d;
+}
+
+function nextStep(){
+  if(S.step===0 && !$('testator').value.trim()){alert('Please enter a fictional testator name.');return}
+  if(S.step===1 && S.gifts.some(g=>!g.asset.trim()||!g.beneficiary.trim())){alert('Please complete or remove each specific gift.');return}
+  if(S.step===2){
+    if(!S.residue.length){alert('Add at least one residuary beneficiary.');return}
+    if(Math.abs(totalResidue()-100)>0.001){alert(`Residue shares currently total ${totalResidue()}%. They must total 100%.`);return}
+  }
+  if(S.step<3){S.step++;render()}else downloadSubmission();
+}
+
+function backStep(){if(S.step>0){S.step--;render()}}
+function payload(){
+  return {
+    formatVersion:"3.0-student",
+    submissionId:crypto.randomUUID?crypto.randomUUID():Date.now().toString(36),
+    submittedAt:new Date().toISOString(),
+    testator:$('testator').value.trim(),
+    gifts:S.gifts.map(g=>({asset:g.asset.trim(),beneficiary:g.beneficiary.trim()})),
+    residue:S.residue.map(r=>({beneficiary:r.name.trim(),share:Number(r.share)||0})),
+    draft:makeDraft()
+  };
+}
+function downloadSubmission(){
+  const p=payload();
+  const blob=new Blob([JSON.stringify(p,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`will-builder-submission-${p.submissionId.slice(0,8)}.json`;a.click();
+  $('saved').classList.remove('hidden');
+}
+function copyDraft(){
+  const text=$('draft').textContent;
+  if(navigator.clipboard?.writeText) navigator.clipboard.writeText(text).then(()=>alert('Draft copied.'));
+  else alert('Copy is not available in this browser. Select the draft text and copy it manually.');
+}
+render();
+</script>
+</body>
+</html>
